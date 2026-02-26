@@ -25,8 +25,8 @@ function toBgColor(hex: string) {
   return `rgba(${r}, ${g}, ${b}, 0.18)`;
 }
 
-export default function PrintPage() {
-  const schedules = getAllSchedules();
+export default async function PrintPage() {
+  const schedules = await getAllSchedules();
 
   const byDay = new Map<number, Schedule[]>();
   for (const d of DAY_INDICES) byDay.set(d, []);

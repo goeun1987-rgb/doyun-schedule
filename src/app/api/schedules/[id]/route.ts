@@ -6,7 +6,7 @@ type RouteParams = { params: Promise<{ id: string }> };
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   const body = await request.json();
-  const schedule = updateSchedule(Number(id), body);
+  const schedule = await updateSchedule(Number(id), body);
 
   if (!schedule) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -16,7 +16,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  const deleted = deleteSchedule(Number(id));
+  const deleted = await deleteSchedule(Number(id));
 
   if (!deleted) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });

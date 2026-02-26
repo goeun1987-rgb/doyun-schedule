@@ -1,23 +1,21 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import { createClient, type Client } from '@libsql/client';
 
-const DB_PATH = process.env.DATABASE_PATH || './data/schedule.db';
+let db: Client | null = null;
 
-let db: Database.Database | null = null;
-
-export function getDb(): Database.Database {
+export function getDb(): Client {
   if (!db) {
-    const dbPath = path.resolve(DB_PATH);
-    db = new Database(dbPath);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
-    initTables(db);
+    db = createClient({
+      url: process.env.TURSO_DATABASE_URL || 'file:./data/schedule.db',
+      authToken: process.env.TURSO_AUTH_TOKEN,
+    });
   }
   return db;
 }
 
-function initTables(db: Database.Database) {
-  db.exec(`
+export async function initDb() {
+  const db = getDb();
+
+  await db.executeMultiple(`
     CREATE TABLE IF NOT EXISTS schedules (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
       title         TEXT NOT NULL,
@@ -55,26 +53,13 @@ function initTables(db: Database.Database) {
       FOREIGN KEY (schedule_id) REFERENCES schedules(id)
     );
 
-    CREATE TABLE IF NOT EXISTS kakao_tokens (
-      id                  INTEGER PRIMARY KEY CHECK (id = 1),
-      access_token        TEXT NOT NULL,
-      refresh_token       TEXT NOT NULL,
-      access_expires_at   TEXT NOT NULL,
-      refresh_expires_at  TEXT NOT NULL,
-      updated_at          TEXT DEFAULT (datetime('now','localtime'))
-    );
-
     CREATE TABLE IF NOT EXISTS settings (
       key   TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
   `);
 
-  // Insert default settings if not exist
-  const insertSetting = db.prepare(
-    `INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)`
-  );
-  insertSetting.run('scheduler_active', 'true');
-  insertSetting.run('default_minutes_before', '10');
-  insertSetting.run('timezone', 'Asia/Seoul');
+  await db.execute(`INSERT OR IGNORE INTO settings (key, value) VALUES ('scheduler_active', 'true')`);
+  await db.execute(`INSERT OR IGNORE INTO settings (key, value) VALUES ('default_minutes_before', '10')`);
+  await db.execute(`INSERT OR IGNORE INTO settings (key, value) VALUES ('timezone', 'Asia/Seoul')`);
 }

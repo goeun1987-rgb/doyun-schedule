@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 import { getAllSchedules } from '@/lib/db-schedules';
 import type { Schedule } from '@/lib/types';
 

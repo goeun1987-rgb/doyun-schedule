@@ -154,8 +154,8 @@ export default async function PrintPage() {
                       <div style={{ fontWeight: 700, color: '#1f2937', fontSize: 11 }}>
                         {s.title}
                       </div>
-                      <div style={{ color: '#6b7280', fontSize: 9 }}>
-                        {formatTime(s.start_time)}~{formatTime(s.end_time)}
+                      <div style={{ color: '#6b7280', fontSize: 9, lineHeight: 1.4 }}>
+                        {formatTime(s.start_time)}<br />{formatTime(s.end_time)}
                       </div>
                       {s.location && (
                         <div style={{ color: '#9ca3af', fontSize: 8, marginTop: 1 }}>

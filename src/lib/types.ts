@@ -4,6 +4,7 @@ export interface Schedule {
   id: number;
   title: string;
   type: 'school' | 'academy';
+  schedule_type: 'regular' | 'makeup';
   day_of_week: number; // 0=Sunday, 1=Monday ... 6=Saturday
   start_time: string;  // "HH:MM" 24h format
   end_time: string;    // "HH:MM" 24h format
@@ -53,6 +54,7 @@ export interface Setting {
 export interface CreateScheduleRequest {
   title: string;
   type: 'school' | 'academy';
+  schedule_type?: 'regular' | 'makeup';
   day_of_week: number;
   start_time: string;
   end_time: string;

@@ -24,17 +24,19 @@ function formatTime(t: string) {
 
 interface ModalProps {
   schedule?: Schedule | null;
+  scheduleType: 'regular' | 'makeup';
   onClose: () => void;
   onSaved: () => void;
   onDelete?: (id: number) => void;
 }
 
-function ScheduleModal({ schedule, onClose, onSaved, onDelete }: ModalProps) {
+function ScheduleModal({ schedule, scheduleType, onClose, onSaved, onDelete }: ModalProps) {
   const isEdit = !!schedule;
 
   const [form, setForm] = useState<CreateScheduleRequest & { is_active?: number }>({
     title: schedule?.title ?? '',
     type: schedule?.type ?? 'academy',
+    schedule_type: schedule?.schedule_type ?? scheduleType,
     day_of_week: schedule?.day_of_week ?? getTodayTab(),
     start_time: schedule?.start_time ?? '15:00',
     end_time: schedule?.end_time ?? '16:00',
@@ -163,6 +165,7 @@ function ScheduleModal({ schedule, onClose, onSaved, onDelete }: ModalProps) {
 
 export default function Home() {
   const [selectedDay, setSelectedDay] = useState(1);
+  const [scheduleType, setScheduleType] = useState<'regular' | 'makeup'>('regular');
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Schedule | null>(null);
   const [longPressId, setLongPressId] = useState<number | null>(null);
@@ -172,13 +175,13 @@ export default function Home() {
   }, []);
 
   const { data: schedules = [], isLoading } = useSWR<Schedule[]>(
-    `/api/schedules?day=${selectedDay}`,
+    `/api/schedules?day=${selectedDay}&schedule_type=${scheduleType}`,
     fetcher,
   );
 
   const refresh = useCallback(() => {
-    mutate(`/api/schedules?day=${selectedDay}`);
-  }, [selectedDay]);
+    mutate(`/api/schedules?day=${selectedDay}&schedule_type=${scheduleType}`);
+  }, [selectedDay, scheduleType]);
 
   function openAdd() {
     setEditTarget(null);
@@ -198,7 +201,6 @@ export default function Home() {
   function handleSaved() {
     closeModal();
     refresh();
-    // 수정 시 요일이 바뀌었을 수 있으므로 모든 캐시 무효화
     mutate((key: unknown) => typeof key === 'string' && key.startsWith('/api/schedules'), undefined, { revalidate: true });
   }
 
@@ -235,9 +237,38 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-lg mx-auto flex items-center justify-between px-4 py-3">
-          <h1 className="text-xl font-bold text-gray-900">도윤이 시간표</h1>
+          <h1 className="text-xl font-bold text-gray-900">
+            도윤이 시간표
+            <span className="ml-2 text-sm font-normal text-gray-400">
+              {scheduleType === 'regular' ? '정규' : '보강'}
+            </span>
+          </h1>
           <button onClick={openAdd} className="btn-primary text-sm">
             + 추가
+          </button>
+        </div>
+
+        {/* 정규 / 보강 토글 */}
+        <div className="max-w-lg mx-auto flex border-t border-gray-100">
+          <button
+            onClick={() => setScheduleType('regular')}
+            className={`flex-1 py-2 text-sm font-semibold transition-colors ${
+              scheduleType === 'regular'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-gray-400 border-b-2 border-transparent'
+            }`}
+          >
+            정규
+          </button>
+          <button
+            onClick={() => setScheduleType('makeup')}
+            className={`flex-1 py-2 text-sm font-semibold transition-colors ${
+              scheduleType === 'makeup'
+                ? 'text-orange-500 border-b-2 border-orange-500'
+                : 'text-gray-400 border-b-2 border-transparent'
+            }`}
+          >
+            보강
           </button>
         </div>
 
@@ -318,6 +349,7 @@ export default function Home() {
       {modalOpen && (
         <ScheduleModal
           schedule={editTarget}
+          scheduleType={scheduleType}
           onClose={closeModal}
           onSaved={handleSaved}
           onDelete={handleDelete}

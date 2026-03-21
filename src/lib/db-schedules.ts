@@ -6,18 +6,22 @@ async function ensureDb() {
   return getDb();
 }
 
-export async function getAllSchedules(dayFilter?: number): Promise<Schedule[]> {
+export async function getAllSchedules(dayFilter?: number, scheduleType?: string): Promise<Schedule[]> {
   const db = await ensureDb();
+  const type = scheduleType ?? 'regular';
 
   if (dayFilter !== undefined) {
     const result = await db.execute({
-      sql: 'SELECT * FROM schedules WHERE day_of_week = ? ORDER BY start_time ASC',
-      args: [dayFilter],
+      sql: 'SELECT * FROM schedules WHERE day_of_week = ? AND schedule_type = ? ORDER BY start_time ASC',
+      args: [dayFilter, type],
     });
     return result.rows as unknown as Schedule[];
   }
 
-  const result = await db.execute('SELECT * FROM schedules ORDER BY day_of_week ASC, start_time ASC');
+  const result = await db.execute({
+    sql: 'SELECT * FROM schedules WHERE schedule_type = ? ORDER BY day_of_week ASC, start_time ASC',
+    args: [type],
+  });
   return result.rows as unknown as Schedule[];
 }
 
@@ -31,11 +35,12 @@ export async function createSchedule(data: CreateScheduleRequest): Promise<Sched
   const db = await ensureDb();
 
   const result = await db.execute({
-    sql: `INSERT INTO schedules (title, type, day_of_week, start_time, end_time, location, color, notes)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    sql: `INSERT INTO schedules (title, type, schedule_type, day_of_week, start_time, end_time, location, color, notes)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     args: [
       data.title,
       data.type,
+      data.schedule_type ?? 'regular',
       data.day_of_week,
       data.start_time,
       data.end_time,

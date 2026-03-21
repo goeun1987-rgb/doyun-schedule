@@ -11,6 +11,10 @@ const HOURS = Array.from({ length: END_HOUR - START_HOUR }, (_, i) => START_HOUR
 const TOTAL_MINUTES = (END_HOUR - START_HOUR) * 60;
 const ROW_HEIGHT = 70; // px per hour
 
+interface PrintPageProps {
+  searchParams: Promise<{ type?: string }>;
+}
+
 function timeToMinutes(t: string) {
   const [h, m] = t.split(':').map(Number);
   return h * 60 + m;
@@ -27,8 +31,11 @@ function toBgColor(hex: string) {
   return `rgba(${r}, ${g}, ${b}, 0.18)`;
 }
 
-export default async function PrintPage() {
-  const schedules = await getAllSchedules();
+export default async function PrintPage({ searchParams }: PrintPageProps) {
+  const params = await searchParams;
+  const scheduleType = params.type === 'makeup' ? 'makeup' : 'regular';
+  const title = scheduleType === 'makeup' ? '도윤이 보강 시간표' : '도윤이 정규 시간표';
+  const schedules = await getAllSchedules(undefined, scheduleType);
 
   const byDay = new Map<number, Schedule[]>();
   for (const d of DAY_INDICES) byDay.set(d, []);
@@ -52,7 +59,7 @@ export default async function PrintPage() {
         marginBottom: 14,
         color: '#111827',
       }}>
-        도윤이 시간표
+        {title}
       </h1>
 
       <div style={{

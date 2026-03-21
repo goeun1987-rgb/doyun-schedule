@@ -5,8 +5,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const day = searchParams.get('day');
+    const scheduleType = searchParams.get('schedule_type') ?? 'regular';
 
-    const schedules = await getAllSchedules(day !== null ? Number(day) : undefined);
+    const schedules = await getAllSchedules(day !== null ? Number(day) : undefined, scheduleType);
     return NextResponse.json(schedules);
   } catch (error) {
     console.error('GET /api/schedules error:', error);

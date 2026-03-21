@@ -20,6 +20,7 @@ export async function initDb() {
       id            INTEGER PRIMARY KEY AUTOINCREMENT,
       title         TEXT NOT NULL,
       type          TEXT NOT NULL DEFAULT 'academy',
+      schedule_type TEXT NOT NULL DEFAULT 'regular',
       day_of_week   INTEGER NOT NULL,
       start_time    TEXT NOT NULL,
       end_time      TEXT NOT NULL,
@@ -62,4 +63,11 @@ export async function initDb() {
   await db.execute(`INSERT OR IGNORE INTO settings (key, value) VALUES ('scheduler_active', 'true')`);
   await db.execute(`INSERT OR IGNORE INTO settings (key, value) VALUES ('default_minutes_before', '10')`);
   await db.execute(`INSERT OR IGNORE INTO settings (key, value) VALUES ('timezone', 'Asia/Seoul')`);
+
+  // 기존 DB 마이그레이션: schedule_type 컬럼이 없으면 추가
+  try {
+    await db.execute(`ALTER TABLE schedules ADD COLUMN schedule_type TEXT NOT NULL DEFAULT 'regular'`);
+  } catch {
+    // 이미 존재하면 무시
+  }
 }
